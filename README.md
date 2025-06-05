@@ -43,6 +43,13 @@ Tested with Docker Desktop 4.9.1. Older version might work.
 docker compose -p eve-online-incursion-bot up
 ```
 
+
+Mount file list:
+
+```
+<HostDir>:/app/src/config/
+<HostDir>:/app/incursions_cache.json
+```
 _Add "-d" to run in detached mode._
 
 ### (Option 2) docker run
