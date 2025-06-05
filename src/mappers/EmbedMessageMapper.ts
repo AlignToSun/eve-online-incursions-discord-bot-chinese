@@ -24,12 +24,13 @@ class EmbedMessageMapper {
 
       if (milliUntilNextWindow > 0) {
         spawnWindowField = {
-          name: "Next spawn window starts in:",
-          value: `${Math.round(milliUntilNextWindow / 1000 / 60 / 60)} hours`,
+          name: "下一個入侵最快會在:",
+          value: `${Math.round(milliUntilNextWindow / 1000 / 60 / 60)} 小時後 (<t:${Math.round(((milliUntilNextWindow / 1000) + (now.getTime() / 1000)))}> 
+          | <t:${Math.round(((milliUntilNextWindow / 1000) + (now.getTime() / 1000)))}:R> )`,
         };
       } else {
         spawnWindowField = {
-          name: "Spawn window is active.",
+          name: "入侵冷卻期已經完結",
           value: "\u200B",
         };
       }
@@ -42,24 +43,22 @@ class EmbedMessageMapper {
 
     return new MessageEmbed()
       .setAuthor({
-        name: `No incursion`,
+        name: `暫時未有入侵`,
         url: `https://eve-incursions.de/`,
         iconURL: noIncursionIconUrl,
       })
-      .setTitle(`Sansha's Nation is currently fighting outside of high-sec`)
-      .setDescription(`Actively looking for a new spawn.`)
+      .setTitle(`下一個入侵將會12至36小時後出現`)
+      .setDescription(`正在等待下一個入侵...`)
       .setColor(this.purpleColor)
       .addFields([spawnWindowField])
       .setFooter({
-        text: `Message updated on ${EmbedMessageMapper.dateToEveTimeString(
-          now
+        text: `訊息最後更新： ${EmbedMessageMapper.dateToEveTimeString(
+          now, false
         )}`,
       });
   }
 
-  incursionInfoToEmbedMessage(
-    incursionsCacheEntry: IncursionsCacheEntry
-  ): MessageEmbed {
+  incursionInfoToEmbedMessage(incursionsCacheEntry: IncursionsCacheEntry): MessageEmbed {
     const now = new Date();
     let color: number = this.purpleColor;
 
@@ -81,7 +80,22 @@ class EmbedMessageMapper {
     let lastIncursionDistanceMessage = "N/A";
 
     if (incursionInfo.numberOfJumpsFromLastIncursion !== "N/A") {
-      lastIncursionDistanceMessage = `${incursionInfo.numberOfJumpsFromLastIncursion} jumps from ${incursionInfo.lastIncursionSystemName}`;
+      lastIncursionDistanceMessage = `${incursionInfo.lastIncursionSystemName} ${incursionInfo.numberOfJumpsFromLastIncursion}跳  `;
+    }
+
+    let incursionsStateChinese = "";
+    switch (incursionInfo.state) {
+      case "established":
+        incursionsStateChinese = "已建立據點";
+        break;
+      case "withdrawing":
+        incursionsStateChinese = "正在撤退";
+        break;
+      case "mobilizing":
+        incursionsStateChinese = "正在調動";
+        break;
+      default:
+        incursionsStateChinese = "未知";
     }
 
     return new MessageEmbed()
@@ -91,51 +105,52 @@ class EmbedMessageMapper {
         iconURL: `${incursionInfo.regionIconUrl}`,
       })
       .setTitle(
-        `${incursionInfo.constellationName} is now in ${incursionInfo.state} state`
+        `${incursionInfo.constellationName}的入侵目前${incursionsStateChinese} (${incursionInfo.state})`
       )
       .setDescription(
-        `Detected on ${EmbedMessageMapper.dateToEveTimeString(createAtDate)}`
+        `入侵開始時間: ${EmbedMessageMapper.dateToEveTimeString(createAtDate, true)}`
       )
       .setColor(color)
       .addFields([
         {
-          name: "Incursion information:",
-          value: `**Distance from last incursion:** ${lastIncursionDistanceMessage}\n**Influence level:** ${Math.round(
+          name: "入侵資訊:",
+          value: `**距離上一個入侵點:** ${lastIncursionDistanceMessage}\n**負面影響:** ${Math.round(
             incursionInfo.influence * 100
-          )}%\n**Island constellation:** ${
-            incursionInfo.isIslandConstellation
+          )}%\n**高安島:** ${
+            (incursionInfo.isIslandConstellation === "No" ? "否" : "是")
           }`,
           inline: true,
         },
         {
-          name: `Constellation layout:`,
-          value: `**Headquarter:** ${
+          name: `入侵星座:`,
+          value: `**(總部) Headquarter:** ${
             incursionInfo.headquarterSystem
-          }\n**Staging:** ${
+          }\n**(備戰) Staging:** ${
             incursionInfo.stagingSystem
-          }\n**Vanguards:** ${incursionInfo.vanguardSystems.join(
+          }\n**(先鋒) Vanguards:** ${incursionInfo.vanguardSystems.join(
             ", "
-          )}\n**Assaults:** ${incursionInfo.assaultSystems.join(", ")}`,
+          )}\n**(突襲) Assaults:** ${incursionInfo.assaultSystems.join(", ")}`,
           inline: true,
         },
       ])
       .setFooter({
-        text: `Message updated on ${EmbedMessageMapper.dateToEveTimeString(
-          now
+        text: `訊息最後更新： ${EmbedMessageMapper.dateToEveTimeString(
+          now, false
         )}`,
       });
   }
 
-  private static dateToEveTimeString(date: Date): string {
+  private static dateToEveTimeString(date: Date, discordFormattedTimestemp: boolean): string {
     const locale: Intl.LocalesArgument = "en-US";
     const options: Intl.NumberFormatOptions = { minimumIntegerDigits: 2 };
     const year = date.getUTCFullYear();
-    const month = (date.getUTCMonth() + 1).toLocaleString(locale, options);
+    const month = date.getUTCMonth().toLocaleString(locale, options);
     const day = date.getUTCDate().toLocaleString(locale, options);
     const hours = date.getUTCHours().toLocaleString(locale, options);
     const minutes = date.getUTCMinutes().toLocaleString(locale, options);
+    const epochTime = Math.floor(date.getTime() / 1000);
 
-    return `${year}-${month}-${day} at ${hours}:${minutes} EVE Time`;
+    return `${year}-${month}-${day} at ${hours}:${minutes} EVE Time ${discordFormattedTimestemp? ` (<t:${epochTime}:R>)` : ""}`;
   }
 }
 
