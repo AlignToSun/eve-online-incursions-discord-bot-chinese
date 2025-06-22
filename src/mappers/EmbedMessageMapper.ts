@@ -83,6 +83,21 @@ class EmbedMessageMapper {
       lastIncursionDistanceMessage = `${incursionInfo.lastIncursionSystemName} ${incursionInfo.numberOfJumpsFromLastIncursion}跳  `;
     }
 
+    let description = '';
+    if (incursionInfo.state === 'mobilizing' && incursionInfo.stateUpdatedAt) {
+      // mobilizing+72hr
+      const mobilizingStart = new Date(incursionInfo.stateUpdatedAt);
+      const despawnDate = new Date(mobilizingStart.getTime() + 72 * 60 * 60 * 1000);
+      description = `預計結束時間: ${EmbedMessageMapper.dateToEveTimeString(despawnDate, true)}`;
+    } else if (incursionInfo.state === 'withdrawing' && incursionInfo.stateUpdatedAt) {
+      // withdraw+24hr
+      const withdrawingStart = new Date(incursionInfo.stateUpdatedAt);
+      const despawnDate = new Date(withdrawingStart.getTime() + 24 * 60 * 60 * 1000);
+      description = `預計結束時間: ${EmbedMessageMapper.dateToEveTimeString(despawnDate, true)}`;
+    } else {
+      description = `入侵開始時間: ${EmbedMessageMapper.dateToEveTimeString(createAtDate, true)}`;
+    }
+
     let incursionsStateChinese = "";
     switch (incursionInfo.state) {
       case "established":
@@ -108,7 +123,7 @@ class EmbedMessageMapper {
         `${incursionInfo.constellationName}的入侵目前${incursionsStateChinese} (${incursionInfo.state})`
       )
       .setDescription(
-        `入侵開始時間: ${EmbedMessageMapper.dateToEveTimeString(createAtDate, true)}`
+        description
       )
       .setColor(color)
       .addFields([

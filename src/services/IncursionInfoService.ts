@@ -8,6 +8,7 @@ import ESIIncursion from "../models/esi/ESIIncursion";
 import RegionIconService from "./RegionIconService";
 import IncursionLayoutService from "./IncursionLayoutService";
 import ESIResponse from "../models/esi/ESIResponse";
+import IncursionsCacheService from "./IncursionsCacheService";
 
 class IncursionInfoService {
   private readonly esiService: ESIService;
@@ -26,10 +27,15 @@ class IncursionInfoService {
 
   private esiIncursionCacheExpireDate: Date;
 
+  private stateChangeTimestamps: { [constellationId: number]: { [state: string]: string } } = {};
+
+  private incursionsCacheService: IncursionsCacheService;
+
   constructor(
     _esiService: ESIService,
     _regionIconService: RegionIconService,
-    _incursionLayoutService: IncursionLayoutService
+    _incursionLayoutService: IncursionLayoutService,
+    incursionsCacheService?: IncursionsCacheService
   ) {
     this.esiService = _esiService;
     this.regionIconService = _regionIconService;
@@ -38,6 +44,10 @@ class IncursionInfoService {
     this.esiSystemInfoByNameDict = {};
     this.esiConstellationInfoDict = {};
     this.esiIncursionCacheExpireDate = new Date();
+    this.incursionsCacheService = incursionsCacheService || new IncursionsCacheService();
+
+    // 載入持久化的 stateChangeTimestamps
+    this.stateChangeTimestamps = this.incursionsCacheService.getStateChangeTimestamps();
   }
 
   async findAllIncursionsInfo(
@@ -148,6 +158,21 @@ class IncursionInfoService {
       }
     });
 
+    let stateUpdatedAt: string | undefined = undefined;
+    // 狀態追蹤與紀錄
+    const constellationId = esiIncursion.constellation_id;
+    const currentState = esiIncursion.state;
+    if (!this.stateChangeTimestamps[constellationId]) {
+      this.stateChangeTimestamps[constellationId] = {};
+    }
+    if (!this.stateChangeTimestamps[constellationId][currentState]) {
+      // 新狀態第一次出現，紀錄當前時間
+      this.stateChangeTimestamps[constellationId][currentState] = new Date().toISOString();
+      // 持久化
+      this.incursionsCacheService.setStateChangeTimestamps(this.stateChangeTimestamps);
+    }
+    stateUpdatedAt = this.stateChangeTimestamps[constellationId][currentState];
+
     if (
       constellationInfo === undefined ||
       stagingSolarSystemInfo === undefined ||
@@ -223,6 +248,7 @@ class IncursionInfoService {
         state: esiIncursion.state,
         isIslandConstellation,
         lastIncursionSystemName,
+        stateUpdatedAt, // 新增狀態更新時間
       };
     }
 

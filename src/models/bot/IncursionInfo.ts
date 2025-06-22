@@ -12,6 +12,7 @@ interface IncursionInfo {
   lastIncursionSystemName: string;
   regionIconUrl: string;
   isIslandConstellation: string;
+  stateUpdatedAt?: string;
 }
 
 export default IncursionInfo;
