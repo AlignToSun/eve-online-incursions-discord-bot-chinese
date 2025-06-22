@@ -7,8 +7,6 @@ class IncursionsCacheService {
 
   private readonly incursionsCache: IncursionsCache;
 
-  private stateChangeTimestamps: { [constellationId: number]: { [state: string]: string } } = {};
-
   constructor() {
     this.incursionsCache = {
       noIncursionMessageId: null,
@@ -19,10 +17,6 @@ class IncursionsCacheService {
     try {
       const data = readFileSync(this.incursionCacheFilePath, "utf8");
       this.incursionsCache = JSON.parse(data);
-      // Load stateChangeTimestamps if available
-      if ((this.incursionsCache as any).stateChangeTimestamps) {
-        this.stateChangeTimestamps = (this.incursionsCache as any).stateChangeTimestamps;
-      }
     } catch (err) {
       console.log(err);
     }
@@ -37,6 +31,10 @@ class IncursionsCacheService {
   }
 
   findCurrentIncursions(): IncursionsCacheEntry[] {
+    return this.incursionsCache.currentIncursions;
+  }
+
+  getCurrentIncursions(): IncursionsCacheEntry[] {
     return this.incursionsCache.currentIncursions;
   }
 
@@ -147,29 +145,15 @@ class IncursionsCacheService {
 
   private saveCacheToFile() {
     try {
-      // 將 stateChangeTimestamps 一起寫入
-      const cacheWithState = {
-        ...this.incursionsCache,
-        stateChangeTimestamps: this.stateChangeTimestamps,
-      };
       writeFileSync(
         this.incursionCacheFilePath,
-        JSON.stringify(cacheWithState, null, 4),
+        JSON.stringify(this.incursionsCache, null, 4),
         "utf8"
       );
     } catch (err) {
       console.log("An error occured while writing JSON Object to File.");
       console.log(err);
     }
-  }
-
-  getStateChangeTimestamps() {
-    return this.stateChangeTimestamps;
-  }
-
-  setStateChangeTimestamps(newTimestamps: { [constellationId: number]: { [state: string]: string } }) {
-    this.stateChangeTimestamps = newTimestamps;
-    this.saveCacheToFile();
   }
 }
 

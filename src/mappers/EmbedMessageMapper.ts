@@ -88,12 +88,12 @@ class EmbedMessageMapper {
       // mobilizing+72hr
       const mobilizingStart = new Date(incursionInfo.stateUpdatedAt);
       const despawnDate = new Date(mobilizingStart.getTime() + 72 * 60 * 60 * 1000);
-      description = `預計結束時間: ${EmbedMessageMapper.dateToEveTimeString(despawnDate, true)}`;
+      description = `入侵開始時間: ${EmbedMessageMapper.dateToEveTimeString(createAtDate, true)}\n預計結束時間: ${EmbedMessageMapper.dateToEveTimeString(despawnDate, true)}`;
     } else if (incursionInfo.state === 'withdrawing' && incursionInfo.stateUpdatedAt) {
       // withdraw+24hr
       const withdrawingStart = new Date(incursionInfo.stateUpdatedAt);
       const despawnDate = new Date(withdrawingStart.getTime() + 24 * 60 * 60 * 1000);
-      description = `預計結束時間: ${EmbedMessageMapper.dateToEveTimeString(despawnDate, true)}`;
+      description = `入侵開始時間: ${EmbedMessageMapper.dateToEveTimeString(createAtDate, true)}\n預計結束時間: ${EmbedMessageMapper.dateToEveTimeString(despawnDate, true)}`;
     } else {
       description = `入侵開始時間: ${EmbedMessageMapper.dateToEveTimeString(createAtDate, true)}`;
     }

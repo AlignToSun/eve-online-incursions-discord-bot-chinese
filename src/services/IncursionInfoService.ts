@@ -45,9 +45,6 @@ class IncursionInfoService {
     this.esiConstellationInfoDict = {};
     this.esiIncursionCacheExpireDate = new Date();
     this.incursionsCacheService = incursionsCacheService || new IncursionsCacheService();
-
-    // 載入持久化的 stateChangeTimestamps
-    this.stateChangeTimestamps = this.incursionsCacheService.getStateChangeTimestamps();
   }
 
   async findAllIncursionsInfo(
@@ -70,6 +67,7 @@ class IncursionInfoService {
     const promiseList: Promise<void>[] = [];
 
     esiIncursionInfos.forEach((esiIncursion) => {
+      // 直接呼叫 findCompletedIncursionInfo，不再傳 previousCacheEntry
       promiseList.push(
         this.findCompletedIncursionInfo(esiIncursion, lastIncursionInfo).then(
           (incursionInfo) => {
@@ -142,7 +140,7 @@ class IncursionInfoService {
   private async findCompletedIncursionInfo(
     esiIncursion: ESIIncursion,
     lastIncursionInfo: IncursionInfo | null
-  ): Promise<IncursionInfo | null> {
+  ): Promise<any> {
     const constellationInfo: ESIConstellation | undefined =
       this.esiConstellationInfoDict[esiIncursion.constellation_id];
     const stagingSolarSystemInfo: ESISystem | undefined =
@@ -158,20 +156,24 @@ class IncursionInfoService {
       }
     });
 
-    let stateUpdatedAt: string | undefined = undefined;
-    // 狀態追蹤與紀錄
-    const constellationId = esiIncursion.constellation_id;
+    let stateChangeTimestamps: { [state: string]: string } = {};
     const currentState = esiIncursion.state;
-    if (!this.stateChangeTimestamps[constellationId]) {
-      this.stateChangeTimestamps[constellationId] = {};
+    // read stateChangeTimestamps from cache if available
+    const cacheIncursion = this.incursionsCacheService.getCurrentIncursions().find(
+      (entry: any) => entry.incursionInfo.constellationId === esiIncursion.constellation_id
+    );
+    const cacheTimestamps = cacheIncursion?.incursionInfo?.stateChangeTimestamps || cacheIncursion?.stateChangeTimestamps;
+    if (
+      cacheTimestamps &&
+      typeof cacheTimestamps === 'object' &&
+      Object.keys(cacheTimestamps).length > 0
+    ) {
+      stateChangeTimestamps = { ...cacheTimestamps };
+    } else {
+      // initialize stateChangeTimestamps if not available
+      stateChangeTimestamps[currentState] = new Date().toISOString();
     }
-    if (!this.stateChangeTimestamps[constellationId][currentState]) {
-      // 新狀態第一次出現，紀錄當前時間
-      this.stateChangeTimestamps[constellationId][currentState] = new Date().toISOString();
-      // 持久化
-      this.incursionsCacheService.setStateChangeTimestamps(this.stateChangeTimestamps);
-    }
-    stateUpdatedAt = this.stateChangeTimestamps[constellationId][currentState];
+    const stateUpdatedAt = stateChangeTimestamps[currentState];
 
     if (
       constellationInfo === undefined ||
@@ -248,7 +250,8 @@ class IncursionInfoService {
         state: esiIncursion.state,
         isIslandConstellation,
         lastIncursionSystemName,
-        stateUpdatedAt, // 新增狀態更新時間
+        stateUpdatedAt,
+        stateChangeTimestamps,
       };
     }
 
