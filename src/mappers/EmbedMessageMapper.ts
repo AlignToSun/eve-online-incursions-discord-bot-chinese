@@ -20,7 +20,9 @@ class EmbedMessageMapper {
 
     if (lastIncursion != null) {
       const nextWindowDate = lastIncursion.updatedAt + 12 * 60 * 60 * 1000;
+      const maxWindowDate = lastIncursion.updatedAt + 36 * 60 * 60 * 1000;
       const milliUntilNextWindow = nextWindowDate - now.getTime();
+      const milliUntilMaxWindow = maxWindowDate - now.getTime();
 
       if (milliUntilNextWindow > 0) {
         spawnWindowField = {
@@ -31,13 +33,14 @@ class EmbedMessageMapper {
       } else {
         spawnWindowField = {
           name: "入侵冷卻期已經完結",
-          value: "\u200B",
+          value: `入侵最遲會在: ${Math.round(milliUntilMaxWindow / 1000 / 60 / 60)} 小時後 (<t:${Math.round(((milliUntilMaxWindow / 1000) + (now.getTime() / 1000)))}> 
+          | <t:${Math.round(((milliUntilMaxWindow / 1000) + (now.getTime() / 1000)))}:R> )出現`,
         };
       }
     } else {
       spawnWindowField = {
         name: "Next spawn window is currently not available.",
-        value: "\u200B",
+        value: "發生錯誤，無法獲取入侵冷卻期資訊。",
       };
     }
 
