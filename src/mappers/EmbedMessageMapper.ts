@@ -84,15 +84,25 @@ class EmbedMessageMapper {
     }
 
     let description = '';
-    if (incursionInfo.state === 'mobilizing' && incursionInfo.stateUpdatedAt) {
+    if (incursionInfo.state === 'mobilizing' && incursionInfo.stateChangeTimestamps) {
       // mobilizing+72hr
-      const mobilizingStart = new Date(incursionInfo.stateUpdatedAt);
-      const despawnDate = new Date(mobilizingStart.getTime() + 72 * 60 * 60 * 1000);
+      let despawnDate = null;
+      if (incursionInfo.stateChangeTimestamps['mobilizing'] === undefined) {
+        // return a fallback message if the timestamp is not available
+        despawnDate = 0;
+      }
+      const mobilizingStart = new Date(incursionInfo.stateChangeTimestamps['mobilizing']);
+      despawnDate = new Date(mobilizingStart.getTime() + 72 * 60 * 60 * 1000);
       description = `入侵開始時間: ${EmbedMessageMapper.dateToEveTimeString(createAtDate, true)}\n預計結束時間: ${EmbedMessageMapper.dateToEveTimeString(despawnDate, true)}`;
-    } else if (incursionInfo.state === 'withdrawing' && incursionInfo.stateUpdatedAt) {
+    } else if (incursionInfo.state === 'withdrawing' && incursionInfo.stateChangeTimestamps) {
       // withdraw+24hr
-      const withdrawingStart = new Date(incursionInfo.stateUpdatedAt);
-      const despawnDate = new Date(withdrawingStart.getTime() + 24 * 60 * 60 * 1000);
+      let despawnDate = null;
+      if (incursionInfo.stateChangeTimestamps['withdrawing'] === undefined) {
+        // return a fallback message if the timestamp is not available
+        despawnDate = 0;
+      }
+      const withdrawingStart = new Date(incursionInfo.stateChangeTimestamps['withdrawing']);
+      despawnDate = new Date(withdrawingStart.getTime() + 24 * 60 * 60 * 1000);
       description = `入侵開始時間: ${EmbedMessageMapper.dateToEveTimeString(createAtDate, true)}\n預計結束時間: ${EmbedMessageMapper.dateToEveTimeString(despawnDate, true)}`;
     } else {
       description = `入侵開始時間: ${EmbedMessageMapper.dateToEveTimeString(createAtDate, true)}`;
