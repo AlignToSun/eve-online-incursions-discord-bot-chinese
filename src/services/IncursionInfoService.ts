@@ -169,6 +169,11 @@ class IncursionInfoService {
       Object.keys(cacheTimestamps).length > 0
     ) {
       stateChangeTimestamps = { ...cacheTimestamps };
+      // We have the stateChangeTimestamps from cache, but the entry may not exist for the current state.
+      // If it doesn't exist, we initialize it with the current timestamp.
+      if (!stateChangeTimestamps[currentState]) {
+        stateChangeTimestamps[currentState] = new Date().toISOString();
+      }
     } else {
       // initialize stateChangeTimestamps if not available
       stateChangeTimestamps[currentState] = new Date().toISOString();
