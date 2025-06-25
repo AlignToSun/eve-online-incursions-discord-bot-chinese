@@ -48,7 +48,6 @@ class EmbedMessageMapper {
     // Otherwise its a "early-pop"
     if (lastIncursion && 
       lastIncursion.incursionInfo.stateChangeTimestamps && (lastIncursion.incursionInfo.stateChangeTimestamps['mobilizing'] || lastIncursion.incursionInfo.stateChangeTimestamps['withdrawing'])) {
-      // incursions ended normally
       return new MessageEmbed()
       .setAuthor({
         name: `暫時未有入侵`,
@@ -74,7 +73,7 @@ class EmbedMessageMapper {
       })
       .setTitle(`入侵被提前結束了，下一個入侵將會12至36小時後出現`)
       .setDescription(`正在等待下一個入侵...`) 
-      .setColor(this.purpleColor)
+      .setColor(this.yellowColor)
       .addFields([spawnWindowField])
       .setFooter({
         text: `訊息最後更新： ${EmbedMessageMapper.dateToEveTimeString(
