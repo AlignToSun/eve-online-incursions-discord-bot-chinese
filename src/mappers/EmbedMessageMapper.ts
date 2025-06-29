@@ -44,7 +44,11 @@ class EmbedMessageMapper {
       };
     }
 
-    return new MessageEmbed()
+    // Return the incursion is ended "normally" (we got stateChangeTimestamps 'mobilizing' and 'withdrawing')
+    // Otherwise its a "early-pop"
+    if (lastIncursion && 
+      lastIncursion.incursionInfo.stateChangeTimestamps && (lastIncursion.incursionInfo.stateChangeTimestamps['mobilizing'] || lastIncursion.incursionInfo.stateChangeTimestamps['withdrawing'])) {
+      return new MessageEmbed()
       .setAuthor({
         name: `暫時未有入侵`,
         url: `https://eve-incursions.de/`,
@@ -59,6 +63,25 @@ class EmbedMessageMapper {
           now, false
         )}`,
       });
+    } else {
+      // incursions ended early
+      return new MessageEmbed()
+      .setAuthor({
+        name: `暫時未有入侵`,
+        url: `https://eve-incursions.de/`,
+        iconURL: noIncursionIconUrl,
+      })
+      .setTitle(`入侵被提前結束了，下一個入侵將會12至36小時後出現`)
+      .setDescription(`正在等待下一個入侵...`) 
+      .setColor(this.yellowColor)
+      .addFields([spawnWindowField])
+      .setFooter({
+        text: `訊息最後更新： ${EmbedMessageMapper.dateToEveTimeString(
+          now, false
+        )}`,
+      });
+    }
+    
   }
 
   incursionInfoToEmbedMessage(incursionsCacheEntry: IncursionsCacheEntry): MessageEmbed {
