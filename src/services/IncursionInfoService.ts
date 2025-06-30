@@ -172,10 +172,12 @@ class IncursionInfoService {
       // We have the stateChangeTimestamps from cache, but the entry may not exist for the current state.
       // If it doesn't exist, we initialize it with the current timestamp.
       if (!stateChangeTimestamps[currentState]) {
+        console.log(`State change timestamp for state '${currentState}' not found in cache for incursion ${esiIncursion.constellation_id}, initializing with current timestamp.`);
         stateChangeTimestamps[currentState] = new Date().toISOString();
       }
     } else {
       // initialize stateChangeTimestamps if not available
+      console.log(`No stateChangeTimestamps found in cache for incursion ${esiIncursion.constellation_id}, initializing with current timestamp.`);
       stateChangeTimestamps[currentState] = new Date().toISOString();
     }
     const stateUpdatedAt = stateChangeTimestamps[currentState];
