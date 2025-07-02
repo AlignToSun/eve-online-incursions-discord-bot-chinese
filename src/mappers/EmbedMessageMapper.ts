@@ -2,6 +2,7 @@ import { EmbedFieldData, MessageEmbed } from "discord.js";
 import ESIIncursionState from "../models/esi/ESIIncursionState";
 import IncursionsCacheEntry from "../models/bot/IncursionsCacheEntry";
 import { noIncursionIconUrl } from "../config/icon_urls.json";
+import { spawn } from "child_process";
 
 class EmbedMessageMapper {
   private readonly greenColor: number = 0x00b129;
@@ -17,6 +18,7 @@ class EmbedMessageMapper {
   ): MessageEmbed {
     let spawnWindowField: EmbedFieldData;
     const now = new Date();
+    let isBrokenSpawn = false; // over the 36h mark
 
     if (lastIncursion != null) {
       const nextWindowDate = lastIncursion.updatedAt + 12 * 60 * 60 * 1000;
@@ -31,11 +33,20 @@ class EmbedMessageMapper {
           | <t:${Math.round(((milliUntilNextWindow / 1000) + (now.getTime() / 1000)))}:R> )`,
         };
       } else {
+    
         spawnWindowField = {
           name: "入侵冷卻期已經完結",
           value: `入侵最遲會在: ${Math.round(milliUntilMaxWindow / 1000 / 60 / 60)} 小時後 (<t:${Math.round(((milliUntilMaxWindow / 1000) + (now.getTime() / 1000)))}> 
           | <t:${Math.round(((milliUntilMaxWindow / 1000) + (now.getTime() / 1000)))}:R> )出現`,
         };
+        // if over 36h + 10m, consider it a broken spawn
+        if (milliUntilMaxWindow < -10 * 60 * 1000) {
+          isBrokenSpawn = true; // over the 36h mark
+          spawnWindowField = {
+            name: "入侵冷卻期已經完結",
+            value: `入侵已經超過36小時沒有出現，可能是入侵冷卻期資訊有誤。抑或者ccp弄壞了。`
+          };
+        }
       }
     } else {
       spawnWindowField = {
@@ -54,7 +65,7 @@ class EmbedMessageMapper {
         url: `https://eve-incursions.de/`,
         iconURL: noIncursionIconUrl,
       })
-      .setTitle(`下一個入侵將會12至36小時後出現`)
+      .setTitle(isBrokenSpawn ? `ccp弄壞了入侵/冷卻資訊有誤` : `入侵冷卻期已經完結`)
       .setDescription(`正在等待下一個入侵...`)
       .setColor(this.purpleColor)
       .addFields([spawnWindowField])
@@ -63,24 +74,23 @@ class EmbedMessageMapper {
           now, false
         )}`,
       });
-    } else {
-      // incursions ended early
-      return new MessageEmbed()
-      .setAuthor({
-        name: `暫時未有入侵`,
-        url: `https://eve-incursions.de/`,
-        iconURL: noIncursionIconUrl,
-      })
-      .setTitle(`入侵被提前結束了，下一個入侵將會12至36小時後出現`)
-      .setDescription(`正在等待下一個入侵...`) 
-      .setColor(this.yellowColor)
-      .addFields([spawnWindowField])
-      .setFooter({
-        text: `訊息最後更新： ${EmbedMessageMapper.dateToEveTimeString(
-          now, false
-        )}`,
-      });
     }
+    // incursions ended early
+    return new MessageEmbed()
+    .setAuthor({
+      name: `暫時未有入侵`,
+      url: `https://eve-incursions.de/`,
+      iconURL: noIncursionIconUrl,
+    })
+    .setTitle(`入侵被提前結束了，下一個入侵將會12至36小時後出現`)
+    .setDescription(isBrokenSpawn ? `入侵冷卻期資訊有誤，可能是ccp弄壞了。` : `正在等待下一個入侵...`)
+    .setColor(this.yellowColor)
+    .addFields([spawnWindowField])
+    .setFooter({
+      text: `訊息最後更新： ${EmbedMessageMapper.dateToEveTimeString(
+        now, false
+      )}`,
+    });
     
   }
 
