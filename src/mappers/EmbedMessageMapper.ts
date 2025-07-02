@@ -44,7 +44,8 @@ class EmbedMessageMapper {
           isBrokenSpawn = true; // over the 36h mark
           spawnWindowField = {
             name: "入侵冷卻期已經完結",
-            value: `入侵已經超過36小時沒有出現，可能是入侵冷卻期資訊有誤。抑或者ccp弄壞了。`
+            value: `入侵已經超過36小時沒有出現，可能是入侵冷卻期資訊有誤。抑或者ccp弄壞了。 正常情況下入侵最遲會在: ${Math.round(milliUntilMaxWindow / 1000 / 60 / 60)} 小時後 (<t:${Math.round(((milliUntilMaxWindow / 1000) + (now.getTime() / 1000)))}> 
+            | <t:${Math.round(((milliUntilMaxWindow / 1000) + (now.getTime() / 1000)))}:R> )出現`,
           };
         }
       }
