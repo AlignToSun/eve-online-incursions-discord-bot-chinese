@@ -1,8 +1,14 @@
-# [EVE Online incursions Discord bot](https://github.com/OlivierPelletier/eve-online-incursions-discord-bot)
+ # [EVE Online incursions Discord bot](https://github.com/OlivierPelletier/eve-online-incursions-discord-bot)
 
 An EVE Online Discord bot for incursions enthousiast.
 
-![Discord message](https://user-images.githubusercontent.com/9085097/178177985-ae6be01e-47f7-4334-9574-063e2bb378b2.png)
+This is the discord bot source code for the Align To Sun Incursions's discord bot
+
+<a href="https://discord.gg/tSg3Pkc4"><img src="https://discordapp.com/api/guilds/1105020362418298931/widget.png?style=banner2" alt="Discord Server"></a>
+
+This is how it looks like in discord:
+
+<img width="1077" height="532" alt="discord" src="https://github.com/user-attachments/assets/e0eb3a32-2de7-44b6-8733-d7c113f1b962" />
 
 ## Sponsors
 
